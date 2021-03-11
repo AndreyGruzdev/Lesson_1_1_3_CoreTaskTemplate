@@ -1,35 +1,100 @@
 package jm.task.core.jdbc.dao;
 
 import jm.task.core.jdbc.model.User;
+import jm.task.core.jdbc.util.Util;
 
+import java.sql.*;
+import java.util.ArrayList;
 import java.util.List;
 
 public class UserDaoJDBCImpl implements UserDao {
-    public UserDaoJDBCImpl() {
 
+    public UserDaoJDBCImpl() {
     }
 
     public void createUsersTable() {
-
+        try (Connection connect = Util.getConnection()) {
+            String sql = "create table users(" +
+                    "id int auto_increment, " +
+                    "name varchar(255) not null, " +
+                    "lastName varchar(255) not null, " +
+                    "age int not null, " +
+                    "constraint table_name_pk primary key (id))";
+            PreparedStatement prepStatement = connect.prepareStatement(sql);
+            prepStatement.executeUpdate();
+        } catch (SQLException e) {
+            System.err.println("Ошибка при создании таблицы");
+        }
     }
 
     public void dropUsersTable() {
-
+        try (Connection connect = Util.getConnection()) {
+//            String tableName = "users";
+            String sql = "drop table mydbtest.users";
+            PreparedStatement prepStatement = connect.prepareStatement(sql);
+//            prepStatement.setString(1, tableName);
+            prepStatement.executeUpdate();
+        } catch (SQLException e) {
+            System.err.println("Ошибка при удалении таблицы");
+        }
     }
 
     public void saveUser(String name, String lastName, byte age) {
-
+        try (Connection connect = Util.getConnection()) {
+            String sql = "INSERT INTO mydbtest.users (`name`, `lastname`, `age`) VALUES (?, ?, ?)";
+            PreparedStatement prepStatement = connect.prepareStatement(sql);
+            prepStatement.setString(1, name);
+            prepStatement.setString(2, lastName);
+            prepStatement.setByte(3, age);
+            prepStatement.executeUpdate();
+        } catch (SQLException e) {
+            System.err.println("Ошибка при добавлении пользователя");
+        }
     }
 
     public void removeUserById(long id) {
-
+        try (Connection connect = Util.getConnection()) {
+            String sql = "DELETE FROM mydbtest.users WHERE (`id` = ?)";
+            PreparedStatement prepStatement = connect.prepareStatement(sql);
+            prepStatement.setLong(1, id);
+            prepStatement.executeUpdate();
+        } catch (SQLException e) {
+            System.err.println("Ошибка при удалении пользователя по id");
+        }
     }
 
     public List<User> getAllUsers() {
-        return null;
+
+        List<User> listUsers = new ArrayList<>();
+
+        try (Connection connect = Util.getConnection()) {
+            String sql = "SELECT * FROM mydbtest.users";
+            Statement statement = connect.createStatement();
+            ResultSet resultSet = statement.executeQuery(sql);
+            int i = 0;
+            while (resultSet.next()) {
+                listUsers.add(i, new User());
+                listUsers.get(i).setId(resultSet.getLong(1));
+                listUsers.get(i).setName(resultSet.getString(2));
+                listUsers.get(i).setLastName(resultSet.getString(3));
+                listUsers.get(i).setAge(resultSet.getByte(4));
+                i++;
+            }
+        } catch (SQLException e) {
+            System.err.println("Ошибка при получении списка пользователей");
+        }
+        return listUsers;
     }
 
     public void cleanUsersTable() {
-
+        try (Connection connect = Util.getConnection()) {
+            String sql = "TRUNCATE TABLE mydbtest.users";
+//            String tableName = "users";
+            PreparedStatement prepStatement = connect.prepareStatement(sql);
+//            prepStatement.setString(1, tableName);
+            prepStatement.executeUpdate();
+        } catch (SQLException e) {
+            System.err.println("Ошибка при очистке таблицы");
+        }
     }
 }
